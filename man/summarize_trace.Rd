@@ -4,14 +4,14 @@
 \alias{summarize_trace}
 \title{Summarize the results of BRACoD}
 \usage{
-summarize_trace(trace, bug_names = NULL, cutoff = 0.3)
+summarize_trace(trace, taxon_names = NULL, cutoff = 0.3)
 }
 \arguments{
 \item{trace}{the pymc3 object that is the output of run_bracod()}
 
-\item{bug_names}{optional, a list of names of the bacteria to include in the results}
+\item{taxon_names}{optional, a list of names of the bacteria to include in the results}
 
-\item{cutoff}{this is the cutoff on the average inclusion for inclusion}
+\item{cutoff}{this is the cutoff on the average inclusion for inclusion. We reccomend a value of 0.3, but you can lower the value to include less confident taxon or raise the cutoff to exclude them.}
 }
 \value{
 a dataframe with information about the bacteria that BRACoD identified

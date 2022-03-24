@@ -33,14 +33,15 @@ install_bracod <- function(method = "auto", conda = "auto") {
 #' @param var_contributor If you use a uniform distribution, this is the range of the distribution, with a normal distribution it is the variance used to simulate the contribution coefficient.
 #' @param use_uniform use a uniform distribution to simulate the contribution coefficient. Alternative is the normal distribution.
 #' @param n_samples_use number of microbiome samples to simulate. If NULL, uses the same number of samples as in your dataframe
-#' @param corr_value the bug-bug correlation value you want to include in the simulation
+#' @param corr_value the bacteria-bacteria correlation value you want to include in the simulation
 #' @param return_absolute returns the abosulte abundance values instead of the simulated microbiome counts
 #' @param seed random seed for reproducibility
 #' @return a list containing 1) the simulated count data 2) the simulated environmental variable and 3) the simulated contribution coefficients
 #' @export
 simulate_microbiome_counts <- function(df, n_contributors = 20, coeff_contributor = 0.0, min_ab_contributor = -9, sd_Y = 1.0, n_reads = 100000, var_contributor = 5.0, use_uniform = TRUE, n_samples_use = NULL, corr_value = NULL,  return_absolute = FALSE, seed = NULL) {
   BRACoD <- reticulate::import("BRACoD")
-  return(BRACoD$simulate_microbiome_counts(df, n_contributors = n_contributors, coeff_contributor = coeff_contributor, min_ab_contributor = min_ab_contributor, sd_Y = sd_Y, n_reads = n_reads, var_contributor = var_contributor, use_uniform = use_uniform, n_samples_use = n_samples_use, corr_value = corr_value, return_absolute = return_absolute, seed = seed))
+  results <- BRACoD$simulate_microbiome_counts(df, n_contributors = n_contributors, coeff_contributor = coeff_contributor, min_ab_contributor = min_ab_contributor, sd_Y = sd_Y, n_reads = n_reads, var_contributor = var_contributor, use_uniform = use_uniform, n_samples_use = n_samples_use, corr_value = corr_value, return_absolute = return_absolute, seed = seed)
+  return(list(sim_counts=results[[1]],sim_y=results[[2]],contributions=results[[3]]))
 }
 
 
@@ -122,8 +123,8 @@ run_bracod <- function(df_relab, env_var, n_sample=1000, n_burn=1000, njobs=4) {
 #' coefficient (beta), telling you the association between that bacteria and the environmental
 #' variable
 #' @param trace the pymc3 object that is the output of run_bracod()
-#' @param bug_names optional, a list of names of the bacteria to include in the results
-#' @param cutoff this is the cutoff on the average inclusion for inclusion
+#' @param taxon_names optional, a list of names of the bacteria to include in the results
+#' @param cutoff this is the cutoff on the average inclusion for inclusion. We reccomend a value of 0.3, but you can lower the value to include less confident taxon or raise the cutoff to exclude them.
 #' @return a dataframe with information about the bacteria that BRACoD identified
 #' @export
 #' @examples
@@ -131,26 +132,29 @@ run_bracod <- function(df_relab, env_var, n_sample=1000, n_burn=1000, njobs=4) {
 #' trace <- run_bracod(sim_relab, sim_y, n_sample = 1000, n_burn=1000, njobs=4)
 #' df_summary <- summarize_trace(trace, colnames(sim_relab))
 #' }
-summarize_trace <- function(trace, bug_names=NULL, cutoff=0.3) {
+summarize_trace <- function(trace, taxon_names=NULL, cutoff=0.3) {
   BRACoD <- reticulate::import("BRACoD")
-  return(BRACoD$summarize_trace(trace, bug_names, cutoff))
+  df <- BRACoD$summarize_trace(trace, taxon_names, cutoff)
+  # Python to R numbering
+  df$taxon_num <- df$taxon_num + 1
+  return(df)
 }
 
 #' Score the results of BRACoD
 #'
 #' This calculate the precision, recall and F1 of your BRACoD results if you know
 #' the ground truth, ie. if this is simulated data.
-#' @param bugs_identified a list of integers corresponding to the indicies of the bugs you identified with BRACoD
-#' @param bugs_actual a list of integers corresponding to the indicies of the bugs that truely contribute to butyrate levels
+#' @param taxon_identified a list of integers corresponding to the indicies of the taxon you identified with BRACoD
+#' @param taxon_actual a list of integers corresponding to the indicies of the taxon that truely contribute to butyrate levels
 #' @return a list containing 1) the precision 2) the recall 3) the f1 metric
 #' @export
 #' @examples
 #' \dontrun{
 #' df_summary <- summarize_trace(trace, colnames(sim_relab))
-#' bugs_identified <- df_summary$bugs
-#' bugs_actual <- which(contributions != 0)
+#' taxon_identified <- df_summary$taxon
+#' taxon_actual <- which(contributions != 0)
 #' 
-#' r <- score(bugs_identified, bugs_actual)
+#' r <- score(taxon_identified, taxon_actual)
 #' 
 #' precision <- r[[1]]
 #' recall <- r[[2]]
@@ -158,9 +162,10 @@ summarize_trace <- function(trace, bug_names=NULL, cutoff=0.3) {
 #' 
 #' print(sprintf("Precision: %.2f, Recall: %.2f, F1: %.2f",precision, recall, f1))
 #' }
-score <- function(bugs_identified, bugs_actual) {
+score <- function(taxon_identified, taxon_actual) {
   BRACoD <- reticulate::import("BRACoD")
-  return(BRACoD$score(bugs_identified, bugs_actual))
+  results <- BRACoD$score(taxon_identified, taxon_actual)
+  return(list(precision=results[[1]],recall=results[[2]],f1=results[[3]]))
 }
 
 
@@ -174,7 +179,8 @@ score <- function(bugs_identified, bugs_actual) {
 #' @export
 remove_null <- function(df_relab, Y) {
   BRACoD <- reticulate::import("BRACoD")
-  return(BRACoD$remove_null(df_relab, Y))
+  results <- BRACoD$remove_null(df_relab, Y)
+  return(list(df_rel=results[[1]],Y=results[[2]]))
 }
 
 

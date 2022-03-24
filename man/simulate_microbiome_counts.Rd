@@ -38,7 +38,7 @@ simulate_microbiome_counts(
 
 \item{n_samples_use}{number of microbiome samples to simulate. If NULL, uses the same number of samples as in your dataframe}
 
-\item{corr_value}{the bug-bug correlation value you want to include in the simulation}
+\item{corr_value}{the bacteria-bacteria correlation value you want to include in the simulation}
 
 \item{return_absolute}{returns the abosulte abundance values instead of the simulated microbiome counts}
 

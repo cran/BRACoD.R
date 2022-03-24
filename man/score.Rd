@@ -4,12 +4,12 @@
 \alias{score}
 \title{Score the results of BRACoD}
 \usage{
-score(bugs_identified, bugs_actual)
+score(taxon_identified, taxon_actual)
 }
 \arguments{
-\item{bugs_identified}{a list of integers corresponding to the indicies of the bugs you identified with BRACoD}
+\item{taxon_identified}{a list of integers corresponding to the indicies of the taxon you identified with BRACoD}
 
-\item{bugs_actual}{a list of integers corresponding to the indicies of the bugs that truely contribute to butyrate levels}
+\item{taxon_actual}{a list of integers corresponding to the indicies of the taxon that truely contribute to butyrate levels}
 }
 \value{
 a list containing 1) the precision 2) the recall 3) the f1 metric
@@ -21,10 +21,10 @@ the ground truth, ie. if this is simulated data.
 \examples{
 \dontrun{
 df_summary <- summarize_trace(trace, colnames(sim_relab))
-bugs_identified <- df_summary$bugs
-bugs_actual <- which(contributions != 0)
+taxon_identified <- df_summary$taxon
+taxon_actual <- which(contributions != 0)
 
-r <- score(bugs_identified, bugs_actual)
+r <- score(taxon_identified, taxon_actual)
 
 precision <- r[[1]]
 recall <- r[[2]]
